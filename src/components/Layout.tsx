@@ -1,6 +1,7 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../lib/auth';
+import CompanySelector from './CompanySelector';
 import {
   LayoutDashboard,
   Briefcase,
@@ -23,6 +24,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
   const location = useLocation();
   const { signOut } = useAuth();
+  const [searchParams] = useSearchParams();
+  const companyId = searchParams.get('company');
+
+  // Add company ID to navigation links if present
+  const navLinks = navigation.map(item => ({
+    ...item,
+    href: companyId ? `${item.href}?company=${companyId}` : item.href
+  }));
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -41,10 +50,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             </button>
           </div>
           
+          <div className="px-4 py-2">
+            <CompanySelector className="bg-indigo-600 text-white border-indigo-500" />
+          </div>
+
           <nav className="flex-1 space-y-1 px-2 py-4">
-            {navigation.map((item) => {
+            {navLinks.map((item) => {
               const Icon = item.icon;
-              const isActive = location.pathname === item.href;
+              const isActive = location.pathname === item.href.split('?')[0];
               return (
                 <Link
                   key={item.name}
@@ -81,11 +94,15 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <FileSpreadsheet className="h-8 w-8 text-white" />
             <span className="ml-2 text-xl font-bold text-white">Gunder ATS</span>
           </div>
+
+          <div className="px-4 py-4">
+            <CompanySelector className="bg-indigo-600 text-white border-indigo-500" />
+          </div>
           
           <nav className="mt-5 flex-1 space-y-1 px-2">
-            {navigation.map((item) => {
+            {navLinks.map((item) => {
               const Icon = item.icon;
-              const isActive = location.pathname === item.href;
+              const isActive = location.pathname === item.href.split('?')[0];
               return (
                 <Link
                   key={item.name}
