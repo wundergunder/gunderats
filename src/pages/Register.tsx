@@ -1,6 +1,17 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FileSpreadsheet, CheckCircle2, Zap, Users, Clock, Shield, Workflow, Globe, MessageSquare, BarChart3 } from 'lucide-react';
+import { 
+  FileSpreadsheet,
+  CheckCircle2,
+  Zap,
+  Users,
+  Clock,
+  Shield,
+  Workflow,
+  Globe,
+  MessageSquare,
+  BarChart3
+} from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 const benefits = [
@@ -59,21 +70,58 @@ export default function Register() {
     setLoading(true);
     setError('');
 
+    // Validate inputs
+    if (!companyName.trim()) {
+      setError('Company name is required');
+      setLoading(false);
+      return;
+    }
+
+    if (!email.trim()) {
+      setError('Email is required');
+      setLoading(false);
+      return;
+    }
+
+    if (!password || password.length < 6) {
+      setError('Password must be at least 6 characters');
+      setLoading(false);
+      return;
+    }
+
     try {
-      const { error } = await supabase.auth.signUp({
-        email,
+      // Create the user account with company metadata
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email: email.trim(),
         password,
         options: {
           data: {
-            company_name: companyName
+            company_name: companyName.trim()
           }
         }
       });
 
-      if (error) throw error;
+      if (signUpError) {
+        // Handle specific error codes
+        if (signUpError.message.includes('CMPNY')) {
+          throw new Error('Company name already exists');
+        } else if (signUpError.message.includes('EMAIL')) {
+          throw new Error('Email is already registered');
+        } else {
+          throw signUpError;
+        }
+      }
+
+      // Check if the user was created successfully
+      if (!data?.user?.id) {
+        throw new Error('Failed to create user account');
+      }
+
+      // Success - navigate to dashboard
       navigate('/dashboard');
     } catch (err: any) {
-      setError(err.message);
+      console.error('Registration error:', err);
+      setError(err.message || 'An error occurred during registration');
     } finally {
       setLoading(false);
     }
@@ -154,6 +202,7 @@ export default function Register() {
                     onChange={(e) => setPassword(e.target.value)}
                     className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                     placeholder="Create a secure password"
+                    minLength={6}
                   />
                 </div>
               </div>
