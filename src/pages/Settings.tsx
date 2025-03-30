@@ -38,15 +38,10 @@ export default function Settings() {
         if (stagesError) throw stagesError;
         setStages(stagesData || []);
 
-        // Fetch team members with user emails from auth schema
+        // Fetch team members with user emails from view
         const { data: teamData, error: teamError } = await supabase
-          .from('team_members')
-          .select(`
-            *,
-            profiles:user_id (
-              email
-            )
-          `);
+          .from('team_members_with_profiles')
+          .select('*');
 
         if (teamError) throw teamError;
         setTeamMembers(teamData || []);
@@ -163,13 +158,8 @@ export default function Settings() {
 
       // Refresh team members list
       const { data: teamData, error: refreshError } = await supabase
-        .from('team_members')
-        .select(`
-          *,
-          profiles:user_id (
-            email
-          )
-        `);
+        .from('team_members_with_profiles')
+        .select('*');
 
       if (refreshError) throw refreshError;
       setTeamMembers(teamData || []);
@@ -320,7 +310,7 @@ export default function Settings() {
                   <div key={member.id} className="flex items-center justify-between bg-gray-50 rounded-md p-3">
                     <div>
                       <p className="text-sm font-medium text-gray-900">
-                        {(member as any).profiles?.email}
+                        {(member as any).user_email}
                       </p>
                       <p className="text-sm text-gray-500 capitalize">
                         {member.role}
